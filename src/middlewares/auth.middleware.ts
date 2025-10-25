@@ -31,12 +31,12 @@ export const authenticateToken = async (
     const token = authHeader.substring(7);
 
     // Verificar si el token está en la lista negra
-    const [blacklisted] = await pool.query(
-      'SELECT id FROM token_blacklist WHERE token = ? AND expires_at > NOW()',
+    const blacklistedResult = await pool.query(
+      'SELECT id FROM token_blacklist WHERE token = $1 AND expires_at > NOW()',
       [token]
     );
 
-    if (Array.isArray(blacklisted) && blacklisted.length > 0) {
+    if (blacklistedResult.rows.length > 0) {
       res.status(401).json({ message: 'Token inválido' });
       return;
     }
@@ -48,17 +48,21 @@ export const authenticateToken = async (
     ) as JwtPayload;
 
     // Verificar que el usuario aún exista
-    const [users] = await pool.query(
-      'SELECT id, email, rol FROM usuarios WHERE id = ?',
+    const usersResult = await pool.query(
+      'SELECT id, email, rol FROM usuarios WHERE id = $1',
       [decoded.id]
     );
 
-    if (!Array.isArray(users) || users.length === 0) {
+    if (usersResult.rows.length === 0) {
       res.status(401).json({ message: 'Usuario no encontrado' });
       return;
     }
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      rol: decoded.rol as 'usuario' | 'admin'
+    };
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
