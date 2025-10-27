@@ -103,6 +103,117 @@ npm run start:prod
 npm run start:debug
 ```
 
+## 🐳 Docker
+
+### Desarrollo Local con Docker Compose
+
+Para ejecutar toda la aplicación con Docker (API + PostgreSQL):
+
+```bash
+docker-compose up -d
+```
+
+La aplicación estará disponible en:
+- **API**: http://localhost:3000
+- **Swagger**: http://localhost:3000/api/docs
+- **PostgreSQL**: localhost:5432
+
+Para detener los contenedores:
+```bash
+docker-compose down
+```
+
+Para ver los logs:
+```bash
+docker-compose logs -f api
+```
+
+### Construir Imagen Docker
+
+```bash
+docker build -t agricultural-api .
+```
+
+### Ejecutar Contenedor
+
+```bash
+docker run -p 3000:3000 \
+  -e DB_HOST=localhost \
+  -e DB_PORT=5432 \
+  -e DB_USERNAME=postgres \
+  -e DB_PASSWORD=postgres \
+  -e DB_NAME=agricultural_db \
+  -e JWT_SECRET=your-secret \
+  agricultural-api
+```
+
+## ☁️ Despliegue en Render
+
+### Configuración en Render
+
+1. **Crear cuenta en Render** (https://render.com)
+
+2. **Crear PostgreSQL Database**
+   - Click en "New +" → "PostgreSQL"
+   - Nombre: `agricultural-db`
+   - Plan: Free
+   - Guarda las credenciales de conexión
+
+3. **Crear Web Service**
+   - Click en "New +" → "Web Service"
+   - Conecta tu repositorio de GitHub/GitLab
+   - Configuración:
+     - **Name**: `agricultural-api`
+     - **Runtime**: Docker
+     - **Dockerfile Path**: `./Dockerfile`
+     - **Docker Context**: `./`
+     - **Docker Command**: (dejar vacío, usa el CMD del Dockerfile)
+
+4. **Variables de Entorno en Render**
+
+Agrega las siguientes variables de entorno en tu Web Service:
+
+```env
+NODE_ENV=production
+PORT=10000
+DB_HOST=<tu-host-de-postgresql>
+DB_PORT=5432
+DB_USERNAME=<tu-usuario>
+DB_PASSWORD=<tu-password>
+DB_NAME=agricultural_db
+JWT_SECRET=<generar-secreto-seguro>
+JWT_EXPIRES_IN=1h
+JWT_REFRESH_SECRET=<generar-secreto-seguro>
+JWT_REFRESH_EXPIRES_IN=7d
+CORS_ORIGIN=https://tu-frontend.vercel.app
+```
+
+**Notas importantes para Render:**
+- El puerto debe ser `10000` (asignado automáticamente por Render)
+- Render asigna la variable `PORT` automáticamente, pero puedes sobrescribirla
+- Usa las credenciales de la base de datos PostgreSQL creada en el paso 2
+- Genera secretos seguros para JWT_SECRET y JWT_REFRESH_SECRET
+- Actualiza CORS_ORIGIN con la URL de tu frontend
+
+5. **Auto-Deploy**
+   - Render se conecta automáticamente a tu repositorio
+   - Cada push a la rama principal (`main` o `master`) desplegará automáticamente
+
+### Scripts de Render
+
+Render usará el `render.yaml` del proyecto si está presente. Este archivo configura automáticamente los servicios y bases de datos.
+
+### Health Check
+
+Render verificará automáticamente el health check del Dockerfile. El endpoint `/api/v1/auth` retornará 401 (no autorizado) cuando la API esté funcionando correctamente.
+
+### Logs en Render
+
+Para ver los logs de tu aplicación en producción:
+1. Ve a tu Web Service en Render
+2. Click en "Logs"
+3. Verás logs en tiempo real de tu aplicación
+
 ## 📚 Documentación API
 
 Una vez que la aplicación esté corriendo, accede a la documentación Swagger en:
