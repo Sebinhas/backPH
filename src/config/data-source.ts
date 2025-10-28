@@ -15,6 +15,9 @@ export const dataSourceOptions: DataSourceOptions = {
   synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  extra: {
+    timezone: 'America/Bogota',
+  },
 };
 
 export const dataSource = new DataSource(dataSourceOptions);
