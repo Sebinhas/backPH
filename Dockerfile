@@ -47,16 +47,12 @@ COPY --chown=nestjs:nodejs package*.json ./
 # Cambiar a usuario no root
 USER nestjs
 
-# Exponer puerto
-EXPOSE 3000
-
 # Variables de entorno por defecto
 ENV NODE_ENV=production
-ENV PORT=3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/v1/auth', (r) => {process.exit(r.statusCode === 401 ? 0 : 1)})"
+# Health check - usa la variable PORT
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/api/v1/auth', (r) => {process.exit(r.statusCode === 401 ? 0 : 1)})"
 
 # Comando para ejecutar la aplicación
 CMD ["node", "dist/main.js"]
