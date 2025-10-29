@@ -40,7 +40,7 @@ export class FincasService {
       // Preparar headers de autenticación
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'tipo-sujetos': '[1]' // 1 = Persona Jurídica, 2 = Persona Natural
+        'tipo-sujetos': '[1]' 
       };
 
       // Agregar access token si está disponible
